@@ -4,8 +4,7 @@
 - **Группа:** `P3213`
 - **Вариант:** `lisp | acc | harv | hw | tick | binary | trap | mem | cstr | prob1`
 
-Усложнения `AC_SHADOW`, `superscalar`, `pipeline`, `cache`, `vector`, `microcode`,
-`port-mapped IO` не реализуются.
+Усложнения не реализуются.
 
 ---
 
