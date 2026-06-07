@@ -238,11 +238,8 @@ word = (opcode << 24) | (mode << 22) | (operand & 0x3FFFFF)
 | Opcode | Mnemonic | Аргумент | Такты | Семантика |
 | ---: | :--- | :--- | :---: | :--- |
 | `0x00` | `HALT` | нет | 4 | Останов модели |
-| `0x01` | `LOAD` | `#x` | 4 | `ACC <- x` |
-| `0x01` | `LOAD` | `x`, `sp+x` | 6 | `ACC <- operand_value` |
-| `0x01` | `LOAD` | `@x` | 8 | `ACC <- DMEM[DMEM[x]]` |
-| `0x02` | `STORE` | `x`, `sp+x` | 6 | `operand <- ACC` |
-| `0x02` | `STORE` | `@x` | 8 | `DMEM[DMEM[x]] <- ACC` |
+| `0x01` | `LOAD` | любой | 4/6/8 | `ACC <- operand_value`; `#x` = 4, `x`/`sp+x` = 6, `@x` = 8 |
+| `0x02` | `STORE` | не `#x` | 6/8 | `operand <- ACC`; `x`/`sp+x` = 6, `@x` = 8 |
 | `0x03` | `ADD` | любой | 4/6/8 | `ACC <- ACC + operand_value` |
 | `0x04` | `SUB` | любой | 4/6/8 | `ACC <- ACC - operand_value` |
 | `0x05` | `MUL` | любой | 4/6/8 | `ACC <- ACC * operand_value` |
