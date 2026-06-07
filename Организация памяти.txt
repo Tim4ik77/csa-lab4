@@ -1,0 +1,11 @@
+Регистры:
+PC
+IR
+AR
+DR
+ACC
+AC_SHADOW
+SP
+FLAGS: N Z V C
+IN_ISR
+IRQ_PENDING

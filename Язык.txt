@@ -1,0 +1,85 @@
+program ::= top_level_form*
+
+top_level_form ::= defconst
+                 | defvar
+                 | defbuffer
+                 | defun
+                 | on_input
+
+defconst  ::= "(" "defconst" symbol literal ")"
+defvar    ::= "(" "defvar" symbol literal ")"
+defbuffer ::= "(" "defbuffer" symbol integer ")"
+defun     ::= "(" "defun" symbol "(" symbol* ")" expr+ ")"
+on_input  ::= "(" "on-input" expr+ ")"
+
+expr ::= atom
+       | begin
+       | setq
+       | if
+       | while
+       | arithmetic
+       | compare
+       | memory
+       | function_call
+
+atom ::= literal | symbol
+
+literal ::= integer
+          | char
+          | string
+
+begin ::= "(" "begin" expr+ ")"
+
+setq ::= "(" "setq" symbol expr ")"
+
+if ::= "(" "if" expr expr expr ")"
+
+while ::= "(" "while" expr expr+ ")"
+
+arithmetic ::= "(" arithmetic_op expr expr ")"
+
+arithmetic_op ::= "+"
+                | "-"
+                | "*"
+                | "/"
+                | "mod"
+
+compare ::= "(" compare_op expr expr ")"
+
+compare_op ::= "="
+             | "!="
+             | "<"
+             | ">"
+             | "<="
+             | ">="
+
+memory ::= "(" "mem-get" expr ")"
+         | "(" "mem-set" expr expr ")"
+
+function_call ::= "(" symbol expr* ")"
+
+integer ::= ["-"] digit+
+
+char ::= "'" literal_char "'"
+
+string ::= '"' literal_char* '"'
+
+literal_char ::= raw_char
+               | escape_sequence
+
+raw_char ::= ? любой печатный ASCII-символ, кроме "'", '"', "\" и перевода строки ?
+
+escape_sequence ::= "\" escape_code
+
+escape_code ::= "n"
+              | "t"
+              | "0"
+              | "\"
+              | "'"
+              | '"'
+
+symbol ::= letter (letter | digit | "_" | "?" | "!")*
+
+letter ::= "a" ... "z" | "A" ... "Z"
+
+digit ::= "0" ... "9"

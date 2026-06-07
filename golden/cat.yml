@@ -1,0 +1,86 @@
+{
+  "name": "cat",
+  "source": "(defconst IO_IN 0)\n(defconst IO_STATUS 4)\n(defconst IO_OUT 8)\n\n(defun main ()\n  (while 1 0))\n\n(on-input\n  (begin\n    (mem-set IO_OUT (mem-get IO_IN))\n    (mem-set IO_STATUS 0)))\n\n",
+  "config": {
+    "mmio": {
+      "input_data": 0,
+      "input_status": 4,
+      "output_data": 8,
+      "input_overrun": 12
+    }
+  },
+  "input": [
+    [
+      50,
+      "a"
+    ],
+    [
+      300,
+      "b"
+    ],
+    [
+      600,
+      "c"
+    ]
+  ],
+  "max_ticks": 1000,
+  "fail_on_max_ticks": false,
+  "machine_code_hex": [
+    "0x000000 - 09000008 - JMP 0x000008",
+    "0x000004 - 09000024 - JMP 0x000024",
+    "0x000008 - 01000001 - LOAD #1",
+    "0x00000C - 08000000 - CMP #0",
+    "0x000010 - 0A00001C - BEQ 0x00001C",
+    "0x000014 - 01000000 - LOAD #0",
+    "0x000018 - 09000008 - JMP 0x000008",
+    "0x00001C - 01000000 - LOAD #0",
+    "0x000020 - 00000000 - HALT",
+    "0x000024 - 01400010 - LOAD 0x000010",
+    "0x000028 - 0240001C - STORE 0x00001C",
+    "0x00002C - 0180001C - LOAD @0x00001C",
+    "0x000030 - 10000000 - PUSH",
+    "0x000034 - 01400018 - LOAD 0x000018",
+    "0x000038 - 0240001C - STORE 0x00001C",
+    "0x00003C - 11000000 - POP",
+    "0x000040 - 0280001C - STORE @0x00001C",
+    "0x000044 - 01000000 - LOAD #0",
+    "0x000048 - 10000000 - PUSH",
+    "0x00004C - 01400014 - LOAD 0x000014",
+    "0x000050 - 0240001C - STORE 0x00001C",
+    "0x000054 - 11000000 - POP",
+    "0x000058 - 0280001C - STORE @0x00001C",
+    "0x00005C - 14000000 - IRET"
+  ],
+  "data_memory": {
+    "0x000010": 0,
+    "0x000014": 4,
+    "0x000018": 8,
+    "0x00001C": 0
+  },
+  "log_excerpt": [
+    "TICK 0 | FETCH_IR | JMP 0x000008 | PC=0x000000 | AR=0x000000 | DR=0 | ACC=0 | SP=0x400000 | FLAGS=N0Z0V0C0 | ISR=0 | IRQ=0 | SIGNALS=imem_read,latch_ir | MEM=imem_read[0x000000]=0x09000008",
+    "TICK 1 | FETCH_PC_INC | JMP 0x000008 | PC=0x000004 | AR=0x000000 | DR=0 | ACC=0 | SP=0x400000 | FLAGS=N0Z0V0C0 | ISR=0 | IRQ=0 | SIGNALS=latch_pc,pc_mux=ALU_RESULT,ar_mux=IR_OPERAND,dr_mux=DMEM_DATA_OUT,acc_mux=ALU_RESULT,alu=ADD",
+    "TICK 2 | DECODE | JMP 0x000008 | PC=0x000004 | AR=0x000000 | DR=0 | ACC=0 | SP=0x400000 | FLAGS=N0Z0V0C0 | ISR=0 | IRQ=0 | SIGNALS=-",
+    "TICK 3 | JUMP_EXEC | JMP 0x000008 | PC=0x000008 | AR=0x000000 | DR=0 | ACC=0 | SP=0x400000 | FLAGS=N0Z0V0C0 | ISR=0 | IRQ=0 | SIGNALS=latch_pc,pc_mux=IR_OPERAND,ar_mux=IR_OPERAND,dr_mux=DMEM_DATA_OUT,acc_mux=ALU_RESULT,alu=ADD",
+    "TICK 4 | FETCH_IR | LOAD #1 | PC=0x000008 | AR=0x000000 | DR=0 | ACC=0 | SP=0x400000 | FLAGS=N0Z0V0C0 | ISR=0 | IRQ=0 | SIGNALS=imem_read,latch_ir | MEM=imem_read[0x000008]=0x01000001",
+    "TICK 5 | FETCH_PC_INC | LOAD #1 | PC=0x00000C | AR=0x000000 | DR=0 | ACC=0 | SP=0x400000 | FLAGS=N0Z0V0C0 | ISR=0 | IRQ=0 | SIGNALS=latch_pc,pc_mux=ALU_RESULT,ar_mux=IR_OPERAND,dr_mux=DMEM_DATA_OUT,acc_mux=ALU_RESULT,alu=ADD",
+    "TICK 6 | DECODE | LOAD #1 | PC=0x00000C | AR=0x000000 | DR=0 | ACC=0 | SP=0x400000 | FLAGS=N0Z0V0C0 | ISR=0 | IRQ=0 | SIGNALS=-",
+    "TICK 7 | LOAD_IMM | LOAD #1 | PC=0x00000C | AR=0x000000 | DR=0 | ACC=1 | SP=0x400000 | FLAGS=N0Z0V0C0 | ISR=0 | IRQ=0 | SIGNALS=latch_acc,pc_mux=ALU_RESULT,ar_mux=IR_OPERAND,dr_mux=DMEM_DATA_OUT,acc_mux=IR_OPERAND,alu=ADD",
+    "TICK 8 | FETCH_IR | CMP #0 | PC=0x00000C | AR=0x000000 | DR=0 | ACC=1 | SP=0x400000 | FLAGS=N0Z0V0C0 | ISR=0 | IRQ=0 | SIGNALS=imem_read,latch_ir | MEM=imem_read[0x00000C]=0x08000000",
+    "TICK 9 | FETCH_PC_INC | CMP #0 | PC=0x000010 | AR=0x000000 | DR=0 | ACC=1 | SP=0x400000 | FLAGS=N0Z0V0C0 | ISR=0 | IRQ=0 | SIGNALS=latch_pc,pc_mux=ALU_RESULT,ar_mux=IR_OPERAND,dr_mux=DMEM_DATA_OUT,acc_mux=ALU_RESULT,alu=ADD",
+    "TICK 10 | DECODE | CMP #0 | PC=0x000010 | AR=0x000000 | DR=0 | ACC=1 | SP=0x400000 | FLAGS=N0Z0V0C0 | ISR=0 | IRQ=0 | SIGNALS=-",
+    "TICK 11 | CMP_EXEC | CMP #0 | PC=0x000010 | AR=0x000000 | DR=0 | ACC=1 | SP=0x400000 | FLAGS=N0Z0V0C1 | ISR=0 | IRQ=0 | SIGNALS=latch_flags,pc_mux=ALU_RESULT,ar_mux=IR_OPERAND,dr_mux=DMEM_DATA_OUT,acc_mux=ALU_RESULT,alu=SUB",
+    "TICK 52 | INT_SAVE_PC_DEC_SP | CMP #0 | PC=0x000010 | AR=0x000000 | DR=0 | ACC=1 | SP=0x3FFFFC | FLAGS=N0Z0V0C1 | ISR=1 | IRQ=0 | SIGNALS=latch_sp,set_in_isr,clear_irq_pending,pc_mux=ALU_RESULT,ar_mux=IR_OPERAND,dr_mux=DMEM_DATA_OUT,acc_mux=ALU_RESULT,alu=SUB",
+    "TICK 118 | STORE_MEM | STORE @0x00001C | PC=0x000044 | AR=0x000008 | DR=97 | ACC=97 | SP=0x3FFFF4 | FLAGS=N0Z0V0C1 | ISR=1 | IRQ=0 | SIGNALS=dmem_write | MEM=dmem_write[0x000008]=97|output 'a'",
+    "TICK 156 | FETCH_IR | IRET | PC=0x00005C | AR=0x000004 | DR=0 | ACC=0 | SP=0x3FFFF4 | FLAGS=N0Z0V0C1 | ISR=1 | IRQ=0 | SIGNALS=imem_read,latch_ir | MEM=imem_read[0x00005C]=0x14000000",
+    "TICK 992 | FETCH_IR | LOAD #1 | PC=0x000008 | AR=0x3FFFFC | DR=16 | ACC=0 | SP=0x400000 | FLAGS=N0Z0V0C1 | ISR=0 | IRQ=0 | SIGNALS=imem_read,latch_ir | MEM=imem_read[0x000008]=0x01000001",
+    "TICK 993 | FETCH_PC_INC | LOAD #1 | PC=0x00000C | AR=0x3FFFFC | DR=16 | ACC=0 | SP=0x400000 | FLAGS=N0Z0V0C1 | ISR=0 | IRQ=0 | SIGNALS=latch_pc,pc_mux=ALU_RESULT,ar_mux=IR_OPERAND,dr_mux=DMEM_DATA_OUT,acc_mux=ALU_RESULT,alu=ADD",
+    "TICK 994 | DECODE | LOAD #1 | PC=0x00000C | AR=0x3FFFFC | DR=16 | ACC=0 | SP=0x400000 | FLAGS=N0Z0V0C1 | ISR=0 | IRQ=0 | SIGNALS=-",
+    "TICK 995 | LOAD_IMM | LOAD #1 | PC=0x00000C | AR=0x3FFFFC | DR=16 | ACC=1 | SP=0x400000 | FLAGS=N0Z0V0C1 | ISR=0 | IRQ=0 | SIGNALS=latch_acc,pc_mux=ALU_RESULT,ar_mux=IR_OPERAND,dr_mux=DMEM_DATA_OUT,acc_mux=IR_OPERAND,alu=ADD",
+    "TICK 996 | FETCH_IR | CMP #0 | PC=0x00000C | AR=0x3FFFFC | DR=16 | ACC=1 | SP=0x400000 | FLAGS=N0Z0V0C1 | ISR=0 | IRQ=0 | SIGNALS=imem_read,latch_ir | MEM=imem_read[0x00000C]=0x08000000",
+    "TICK 997 | FETCH_PC_INC | CMP #0 | PC=0x000010 | AR=0x3FFFFC | DR=16 | ACC=1 | SP=0x400000 | FLAGS=N0Z0V0C1 | ISR=0 | IRQ=0 | SIGNALS=latch_pc,pc_mux=ALU_RESULT,ar_mux=IR_OPERAND,dr_mux=DMEM_DATA_OUT,acc_mux=ALU_RESULT,alu=ADD",
+    "TICK 998 | DECODE | CMP #0 | PC=0x000010 | AR=0x3FFFFC | DR=16 | ACC=1 | SP=0x400000 | FLAGS=N0Z0V0C1 | ISR=0 | IRQ=0 | SIGNALS=-",
+    "TICK 999 | CMP_EXEC | CMP #0 | PC=0x000010 | AR=0x3FFFFC | DR=16 | ACC=1 | SP=0x400000 | FLAGS=N0Z0V0C1 | ISR=0 | IRQ=0 | SIGNALS=latch_flags,pc_mux=ALU_RESULT,ar_mux=IR_OPERAND,dr_mux=DMEM_DATA_OUT,acc_mux=ALU_RESULT,alu=SUB"
+  ],
+  "output": "abc"
+}

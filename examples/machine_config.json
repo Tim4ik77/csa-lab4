@@ -1,0 +1,8 @@
+{
+  "mmio": {
+    "input_data": 0,
+    "input_status": 4,
+    "output_data": 8,
+    "input_overrun": 12
+  }
+}
