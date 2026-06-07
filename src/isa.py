@@ -99,7 +99,7 @@ ALU_OPCODES = {Opcode.ADD, Opcode.SUB, Opcode.MUL, Opcode.DIV, Opcode.MOD}
 @dataclass(frozen=True)
 class Flags:
     n: bool = False
-    z: bool = False
+    z: bool = True
     v: bool = False
     c: bool = False
 

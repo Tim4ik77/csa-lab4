@@ -110,11 +110,9 @@ symbol  ::= letter (letter | digit | "_" | "?" | "!")*
 | `DR` | `0` | Буфер данных Data Memory |
 | `ACC` | `0` | Аккумулятор |
 | `SP` | `0x400000` | Указатель стека |
-| `FLAGS` | `N0Z0V0C0` | Флаги результата ALU |
+| `FLAGS` | `N=0;Z=1;V=0;C=0;` | Флаги результата ALU |
 | `IN_ISR` | `0` | Признак нахождения в обработчике |
 | `IRQ_PENDING` | `0` | Запрошено прерывание ввода |
-
-`AC_SHADOW` не реализован, потому что усложнение `superscalar` не входит в вариант.
 
 ### Instruction Memory
 
@@ -124,6 +122,21 @@ symbol  ::= letter (letter | digit | "_" | "?" | "!")*
 0x000000 : JMP main
 0x000004 : JMP input_handler
 0x000008 : остальной код
+```
+
+Общая схема Instruction Memory:
+
+```text
+Instruction memory
++------------------------------------------------+
+| 0x000000 : JMP main                            |
+| 0x000004 : JMP input_handler                   |
+| 0x000008 : function code / program code        |
+| ...                                            |
+| main     : main program                        |
+| ...                                            |
+| handler  : interrupt handler                   |
++------------------------------------------------+
 ```
 
 Если форма `on-input` отсутствует, транслятор добавляет:
@@ -143,6 +156,24 @@ default_input_handler:
 2. Program data начинается с первого свободного адреса после MMIO-области, выровненного по 4.
 3. `defconst`, `defvar`, `defbuffer`, строковые литералы и служебные ячейки размещаются подряд.
 4. Program data не пересекается с MMIO-адресами.
+
+Общая схема Data Memory для стандартного MMIO-конфига:
+
+```text
+Data memory
++------------------------------------------------+
+| 0x000000 : IO_IN                               |
+| 0x000004 : IO_STATUS                           |
+| 0x000008 : IO_OUT                              |
+| 0x00000C : IO_OVERRUN                          |
+| 0x000010 : program data                        |
+|            defconst, defvar, defbuffer, cstr   |
+| ...                                            |
+|            free memory                         |
+| ...                                            |
+| 0x3FFFFC : stack                               |
++------------------------------------------------+
+```
 
 Пример MMIO-конфига:
 
