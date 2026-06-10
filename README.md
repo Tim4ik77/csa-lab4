@@ -100,7 +100,9 @@ symbol  ::= letter (letter | digit | "_" | "?" | "!")*
 - **Stack start:** `SP = 0x400000`. Стек растет вниз.
 - **Interrupt vector:** `0x000004`.
 
-### Начальное состояние регистров
+### Начальное состояние
+
+Регистры DataPath:
 
 | Регистр | Начальное значение | Назначение |
 | :--- | :---: | :--- |
@@ -111,6 +113,11 @@ symbol  ::= letter (letter | digit | "_" | "?" | "!")*
 | `ACC` | `0` | Аккумулятор |
 | `SP` | `0x400000` | Указатель стека |
 | `FLAGS` | `N=0;Z=1;V=0;C=0;` | Флаги результата ALU |
+
+Состояние Interrupt Controller внутри Control Unit:
+
+| Флаг CU | Начальное значение | Назначение |
+| :--- | :---: | :--- |
 | `IN_ISR` | `0` | Признак нахождения в обработчике |
 | `IRQ_PENDING` | `0` | Запрошено прерывание ввода |
 
@@ -377,7 +384,7 @@ python -m src.machine build/hello.bin build/hello.data.json examples/empty_input
 
 DataPath содержит:
 
-- регистры `PC`, `IR`, `AR`, `DR`, `ACC`, `SP`, `FLAGS`, `IN_ISR`, `IRQ_PENDING`;
+- регистры `PC`, `IR`, `AR`, `DR`, `ACC`, `SP`, `FLAGS`;
 - Instruction Memory;
 - однопортовую Data Memory;
 - MUX-ы `PC_MUX`, `AR_MUX`, `DR_MUX`, `ACC_MUX`, `FLAGS_MUX`, `ALU_A_MUX`, `ALU_B_MUX`;
@@ -389,11 +396,17 @@ DataPath содержит:
 
 Control Unit реализован как hardwired FSM. В коде выделены логические блоки:
 
-- `decode_instruction`;
-- `evaluate_branch`;
-- `evaluate_interrupt`;
-- `next_state`;
-- `generate_control_signals`.
+- `InstructionDecoder` — декодирование `IR` в исполнительное состояние FSM;
+- `BranchLogic` — вычисление `branch_taken` по `IR.opcode` и `FLAGS`;
+- `InterruptController` — регистры `IN_ISR`, `IRQ_PENDING` и проверка `interrupt_enter`;
+- `ControlSequencer` — переходы FSM между микросостояниями;
+- `ControlSignalGenerator` — генерация управляющих сигналов для DataPath и Interrupt Controller.
+
+Класс `ControlUnit` остается фасадом и связывает эти блоки методами `decode_instruction`,
+`evaluate_branch`, `evaluate_interrupt`, `next_state` и `generate_control_signals`.
+
+Флаги `IN_ISR` и `IRQ_PENDING` являются состоянием interrupt controller внутри Control Unit.
+Они программно недоступны и меняются только управляющими сигналами CU или внешним событием trap input.
 
 Каждая инструкция начинается с:
 

@@ -97,7 +97,6 @@ class ControlSignals:
 
     set_in_isr: bool = False
     clear_in_isr: bool = False
-    set_irq_pending: bool = False
     clear_irq_pending: bool = False
     check_stack_pop: bool = False
 
@@ -116,7 +115,6 @@ class ControlSignals:
             "latch_flags",
             "set_in_isr",
             "clear_in_isr",
-            "set_irq_pending",
             "clear_irq_pending",
             "check_stack_pop",
         ):
@@ -162,8 +160,6 @@ class DataPath:
         self.ACC = 0
         self.SP = STACK_START
         self.FLAGS = Flags()
-        self.IN_ISR = False
-        self.IRQ_PENDING = False
 
         self._imem_data_out = 0
         self._dmem_data_out = 0
@@ -220,18 +216,6 @@ class DataPath:
 
         if signals.latch_flags:
             self.latch_flags(next_flags)
-
-        if signals.set_in_isr:
-            self.IN_ISR = True
-
-        if signals.clear_in_isr:
-            self.IN_ISR = False
-
-        if signals.set_irq_pending:
-            self.IRQ_PENDING = True
-
-        if signals.clear_irq_pending:
-            self.IRQ_PENDING = False
 
         return trace
 

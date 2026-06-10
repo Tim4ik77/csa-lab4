@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum, auto
 
 from .datapath import (
@@ -15,7 +16,7 @@ from .datapath import (
     PCMux,
 )
 from .errors import ProcessorError
-from .isa import ALU_OPCODES, BRANCH_OPCODES, AddressingMode, Opcode
+from .isa import ALU_OPCODES, BRANCH_OPCODES, AddressingMode, Flags, Instruction, Opcode
 
 
 class State(Enum):
@@ -133,68 +134,109 @@ IRET_READ_STATES = {
 }
 
 
-class ControlUnit:
-    def __init__(self, datapath: DataPath) -> None:
-        self.datapath = datapath
-        self.state = State.FETCH_IR
-
-    def decode_instruction(self) -> State:
-        instruction = self.datapath.IR
+class InstructionDecoder:
+    def decode(self, instruction: Instruction) -> State:
         opcode = instruction.opcode
+
         if opcode == Opcode.HALT:
             return State.HALT
+
         if opcode == Opcode.LOAD:
             return State.LOAD_IMM if instruction.mode == AddressingMode.IMMEDIATE else State.LOAD_ADDR
+
         if opcode == Opcode.STORE:
             if instruction.mode == AddressingMode.IMMEDIATE:
                 raise ProcessorError("STORE immediate")
             return State.STORE_ADDR
+
         if opcode in ALU_OPCODES:
             return State.ALU_EXEC if instruction.mode == AddressingMode.IMMEDIATE else State.ALU_ADDR
+
         if opcode == Opcode.CMP:
             return State.CMP_EXEC if instruction.mode == AddressingMode.IMMEDIATE else State.CMP_ADDR
+
         if opcode == Opcode.JMP:
             return State.JUMP_EXEC
+
         if opcode in BRANCH_OPCODES:
             return State.BRANCH_EXEC
+
         if opcode == Opcode.PUSH:
             return State.PUSH_DEC_SP
+
         if opcode == Opcode.POP:
             return State.POP_ADDR
+
         if opcode == Opcode.DROP:
             return State.DROP_INC_SP
+
         if opcode == Opcode.CALL:
             return State.CALL_DEC_SP
+
         if opcode == Opcode.RET:
             return State.RET_ADDR
+
         if opcode == Opcode.IRET:
             return State.IRET_RESTORE_ACC_ADDR
+
         raise ProcessorError(f"unknown opcode: {opcode}")
 
-    def evaluate_branch(self) -> bool:
-        opcode = self.datapath.IR.opcode
-        flags = self.datapath.FLAGS
+
+class BranchLogic:
+    def evaluate(self, instruction: Instruction, flags: Flags) -> bool:
+        opcode = instruction.opcode
+
         if opcode == Opcode.JMP:
             return True
+
         if opcode == Opcode.BEQ:
             return flags.z
+
         if opcode == Opcode.BNE:
             return not flags.z
+
         if opcode == Opcode.BLT:
             return flags.n != flags.v
+
         if opcode == Opcode.BLE:
             return flags.z or flags.n != flags.v
+
         if opcode == Opcode.BGT:
             return (not flags.z) and flags.n == flags.v
+
         if opcode == Opcode.BGE:
             return flags.n == flags.v
+
         return False
 
-    def evaluate_interrupt(self) -> bool:
-        return self.datapath.IRQ_PENDING and not self.datapath.IN_ISR
 
-    def next_state(self) -> State:
-        mode = self.datapath.IR.mode
+@dataclass
+class InterruptController:
+    in_isr: bool = False
+    irq_pending: bool = False
+
+    def request_interrupt(self) -> None:
+        self.irq_pending = True
+
+    def evaluate(self) -> bool:
+        return self.irq_pending and not self.in_isr
+
+    def apply_control_signals(self, signals: ControlSignals) -> None:
+        if signals.set_in_isr:
+            self.in_isr = True
+
+        if signals.clear_in_isr:
+            self.in_isr = False
+
+        if signals.clear_irq_pending:
+            self.irq_pending = False
+
+
+class ControlSequencer:
+    def __init__(self) -> None:
+        self.state = State.FETCH_IR
+
+    def next_state(self, mode: AddressingMode, decoded_state: State, interrupt_enter: bool) -> State:
         state = self.state
 
         if state == State.FETCH_IR:
@@ -202,10 +244,10 @@ class ControlUnit:
         elif state == State.FETCH_PC_INC:
             self.state = State.DECODE
         elif state == State.DECODE:
-            self.state = self.decode_instruction()
+            self.state = decoded_state
 
         elif state == State.LOAD_IMM:
-            self.state = self._after_instruction()
+            self.state = self._after_instruction(interrupt_enter)
         elif state == State.LOAD_ADDR:
             self.state = State.LOAD_MEM
         elif state == State.LOAD_MEM:
@@ -215,7 +257,7 @@ class ControlUnit:
         elif state == State.LOAD_INDIRECT_MEM:
             self.state = State.LOAD_WB
         elif state == State.LOAD_WB:
-            self.state = self._after_instruction()
+            self.state = self._after_instruction(interrupt_enter)
 
         elif state == State.STORE_ADDR:
             self.state = State.STORE_INDIRECT_READ if mode == AddressingMode.INDIRECT else State.STORE_PREPARE
@@ -226,7 +268,7 @@ class ControlUnit:
         elif state == State.STORE_PREPARE:
             self.state = State.STORE_MEM
         elif state == State.STORE_MEM:
-            self.state = self._after_instruction()
+            self.state = self._after_instruction(interrupt_enter)
 
         elif state == State.ALU_ADDR:
             self.state = State.ALU_MEM
@@ -237,7 +279,7 @@ class ControlUnit:
         elif state == State.ALU_INDIRECT_MEM:
             self.state = State.ALU_EXEC
         elif state == State.ALU_EXEC:
-            self.state = self._after_instruction()
+            self.state = self._after_instruction(interrupt_enter)
 
         elif state == State.CMP_ADDR:
             self.state = State.CMP_MEM
@@ -248,7 +290,7 @@ class ControlUnit:
         elif state == State.CMP_INDIRECT_MEM:
             self.state = State.CMP_EXEC
         elif state == State.CMP_EXEC or state in {State.JUMP_EXEC, State.BRANCH_EXEC}:
-            self.state = self._after_instruction()
+            self.state = self._after_instruction(interrupt_enter)
 
         elif state == State.PUSH_DEC_SP:
             self.state = State.PUSH_WRITE_ADDR
@@ -257,14 +299,14 @@ class ControlUnit:
         elif state == State.PUSH_WRITE_DATA:
             self.state = State.PUSH_MEM
         elif state == State.PUSH_MEM:
-            self.state = self._after_instruction()
+            self.state = self._after_instruction(interrupt_enter)
 
         elif state == State.POP_ADDR:
             self.state = State.POP_READ
         elif state == State.POP_READ:
             self.state = State.POP_WB
         elif state == State.POP_WB or state == State.DROP_INC_SP:
-            self.state = self._after_instruction()
+            self.state = self._after_instruction(interrupt_enter)
 
         elif state == State.CALL_DEC_SP:
             self.state = State.CALL_SAVE_PC
@@ -273,7 +315,7 @@ class ControlUnit:
         elif state == State.CALL_WRITE:
             self.state = State.CALL_JUMP
         elif state == State.CALL_JUMP:
-            self.state = self._after_instruction()
+            self.state = self._after_instruction(interrupt_enter)
 
         elif state == State.RET_ADDR:
             self.state = State.RET_READ
@@ -282,7 +324,7 @@ class ControlUnit:
         elif state == State.RET_JUMP:
             self.state = State.RET_INC_SP
         elif state == State.RET_INC_SP:
-            self.state = self._after_instruction()
+            self.state = self._after_instruction(interrupt_enter)
 
         elif state == State.INT_SAVE_PC_DEC_SP:
             self.state = State.INT_SAVE_PC_WRITE
@@ -322,7 +364,7 @@ class ControlUnit:
         elif state == State.IRET_RESTORE_PC_READ:
             self.state = State.IRET_RESTORE_PC_WB
         elif state == State.IRET_RESTORE_PC_WB:
-            self.state = self._after_instruction()
+            self.state = self._after_instruction(interrupt_enter)
 
         elif state == State.HALT:
             self.state = State.HALT
@@ -331,10 +373,14 @@ class ControlUnit:
 
         return self.state
 
-    def generate_control_signals(self) -> ControlSignals:
-        state = self.state
-        mode = self.datapath.IR.mode
-        opcode = self.datapath.IR.opcode
+    def _after_instruction(self, interrupt_enter: bool) -> State:
+        return State.INT_SAVE_PC_DEC_SP if interrupt_enter else State.FETCH_IR
+
+
+class ControlSignalGenerator:
+    def generate(self, state: State, instruction: Instruction, branch_taken: bool) -> ControlSignals:
+        mode = instruction.mode
+        opcode = instruction.opcode
 
         if state == State.FETCH_IR:
             return ControlSignals(imem_read=True, latch_ir=True)
@@ -377,7 +423,7 @@ class ControlUnit:
         if state == State.JUMP_EXEC:
             return ControlSignals(sel_pc_mux=PCMux.IR_OPERAND, latch_pc=True)
         if state == State.BRANCH_EXEC:
-            return ControlSignals(sel_pc_mux=PCMux.IR_OPERAND, latch_pc=self.evaluate_branch())
+            return ControlSignals(sel_pc_mux=PCMux.IR_OPERAND, latch_pc=branch_taken)
 
         if state == State.PUSH_DEC_SP:
             return self._sp_update_signals(ALUOp.SUB)
@@ -477,9 +523,6 @@ class ControlUnit:
 
         raise ProcessorError(f"cannot generate signals for state: {state.name}")
 
-    def _after_instruction(self) -> State:
-        return State.INT_SAVE_PC_DEC_SP if self.evaluate_interrupt() else State.FETCH_IR
-
     def _address_signals(self, mode: AddressingMode) -> ControlSignals:
         if mode == AddressingMode.STACK_RELATIVE:
             return ControlSignals(
@@ -516,3 +559,51 @@ class ControlUnit:
             alu_op=op,
             latch_sp=True,
         )
+
+
+class ControlUnit:
+    def __init__(self, datapath: DataPath) -> None:
+        self.datapath = datapath
+        self.instruction_decoder = InstructionDecoder()
+        self.branch_logic = BranchLogic()
+        self.interrupt_controller = InterruptController()
+        self.fsm = ControlSequencer()
+        self.control_signal_generator = ControlSignalGenerator()
+
+    @property
+    def state(self) -> State:
+        return self.fsm.state
+
+    @state.setter
+    def state(self, value: State) -> None:
+        self.fsm.state = value
+
+    @property
+    def IN_ISR(self) -> bool:
+        return self.interrupt_controller.in_isr
+
+    @property
+    def IRQ_PENDING(self) -> bool:
+        return self.interrupt_controller.irq_pending
+
+    def decode_instruction(self) -> State:
+        return self.instruction_decoder.decode(self.datapath.IR)
+
+    def evaluate_branch(self) -> bool:
+        return self.branch_logic.evaluate(self.datapath.IR, self.datapath.FLAGS)
+
+    def evaluate_interrupt(self) -> bool:
+        return self.interrupt_controller.evaluate()
+
+    def request_interrupt(self) -> None:
+        self.interrupt_controller.request_interrupt()
+
+    def next_state(self) -> State:
+        decoded_state = self.decode_instruction() if self.state == State.DECODE else self.state
+        return self.fsm.next_state(self.datapath.IR.mode, decoded_state, self.evaluate_interrupt())
+
+    def generate_control_signals(self) -> ControlSignals:
+        return self.control_signal_generator.generate(self.state, self.datapath.IR, self.evaluate_branch())
+
+    def apply_control_signals(self, signals: ControlSignals) -> None:
+        self.interrupt_controller.apply_control_signals(signals)

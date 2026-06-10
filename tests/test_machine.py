@@ -1,7 +1,15 @@
 import pytest
 
 from src.config import MachineConfig
-from src.control_unit import ControlUnit, State
+from src.control_unit import (
+    BranchLogic,
+    ControlSequencer,
+    ControlSignalGenerator,
+    ControlUnit,
+    InstructionDecoder,
+    InterruptController,
+    State,
+)
 from src.datapath import (
     ACCMux,
     ALUAMux,
@@ -79,8 +87,36 @@ def test_control_unit_fetch_decode_branch_and_interrupt():
     datapath.FLAGS = Flags(z=True)
     datapath.IR = Instruction(Opcode.BEQ, operand=0x20)
     assert cu.evaluate_branch()
-    datapath.IRQ_PENDING = True
+    cu.request_interrupt()
     assert cu.evaluate_interrupt()
+
+
+def test_control_unit_blocks_are_separate():
+    decoder = InstructionDecoder()
+    branch_logic = BranchLogic()
+    interrupt_controller = InterruptController()
+    fsm = ControlSequencer()
+    signal_generator = ControlSignalGenerator()
+
+    assert decoder.decode(Instruction(Opcode.LOAD, AddressingMode.IMMEDIATE, 1)) == State.LOAD_IMM
+    assert branch_logic.evaluate(Instruction(Opcode.BEQ), Flags(z=True))
+
+    interrupt_controller.request_interrupt()
+    assert interrupt_controller.evaluate()
+
+    interrupt_controller.apply_control_signals(ControlSignals(set_in_isr=True, clear_irq_pending=True))
+    assert interrupt_controller.in_isr
+    assert not interrupt_controller.irq_pending
+    assert not interrupt_controller.evaluate()
+
+    assert fsm.next_state(AddressingMode.IMMEDIATE, State.LOAD_IMM, interrupt_enter=False) == State.FETCH_PC_INC
+    signals = signal_generator.generate(
+        State.FETCH_PC_INC,
+        Instruction(Opcode.LOAD, AddressingMode.IMMEDIATE, 1),
+        branch_taken=False,
+    )
+    assert signals.latch_pc
+    assert signals.sel_alu_a_mux == ALUAMux.PC
 
 
 def test_machine_load_store_arithmetic_call_ret_and_output():

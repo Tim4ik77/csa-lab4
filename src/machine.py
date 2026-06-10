@@ -35,11 +35,12 @@ class Machine:
         while self.tick_counter < max_ticks:
             irq, input_messages = self.io.process_tick(self.tick_counter)
             if irq:
-                self.datapath.IRQ_PENDING = True
+                self.control_unit.request_interrupt()
 
             state = self.control_unit.state
             signals = self.control_unit.generate_control_signals()
             trace = self.datapath.apply(signals)
+            self.control_unit.apply_control_signals(signals)
             self._log_tick(state, signals.active_names(), trace.memory, input_messages)
             self.tick_counter += 1
             self.control_unit.next_state()
@@ -51,6 +52,7 @@ class Machine:
 
     def _log_tick(self, state: State, signals: list[str], memory: list[str], inputs: list[str]) -> None:
         dp = self.datapath
+        cu = self.control_unit
 
         parts = [
             f"TICK {self.tick_counter}",
@@ -62,8 +64,8 @@ class Machine:
             f"ACC={dp.ACC}",
             f"SP=0x{dp.SP:06X}",
             f"FLAGS={dp.FLAGS}",
-            f"ISR={int(dp.IN_ISR)}",
-            f"IRQ={int(dp.IRQ_PENDING)}",
+            f"ISR={int(cu.IN_ISR)}",
+            f"IRQ={int(cu.IRQ_PENDING)}",
             f"SIGNALS={','.join(signals) if signals else '-'}",
         ]
 
