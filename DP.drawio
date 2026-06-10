@@ -1043,7 +1043,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="9UChVT_Umr3iLUbCLkd9" name="Страница-5">
-    <mxGraphModel dx="748" dy="918" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="762" dy="368" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1156,7 +1156,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="QMqJjt0w8hrt9uOTJsC9-21" connectable="0" parent="QMqJjt0w8hrt9uOTJsC9-20" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ACC" vertex="1">
+        <mxCell id="QMqJjt0w8hrt9uOTJsC9-21" connectable="0" parent="QMqJjt0w8hrt9uOTJsC9-20" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ALU" vertex="1">
           <mxGeometry relative="1" x="0.9456" as="geometry">
             <mxPoint x="4" as="offset" />
           </mxGeometry>
@@ -1508,7 +1508,7 @@
             <mxPoint x="4" y="-2" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="QE0t6WZAYKJQhowR_09--22" edge="1" parent="1" style="endArrow=classic;startArrow=none;html=1;rounded=0;dashed=1;dashPattern=8 8;startFill=0;" value="">
+        <mxCell id="QE0t6WZAYKJQhowR_09--22" edge="1" parent="1" style="endArrow=classic;startArrow=none;html=1;rounded=0;dashed=1;startFill=0;dashPattern=8 8;" value="">
           <mxGeometry height="50" relative="1" width="50" as="geometry">
             <mxPoint x="630" y="1000" as="sourcePoint" />
             <mxPoint x="630" y="950" as="targetPoint" />
@@ -1519,7 +1519,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="QE0t6WZAYKJQhowR_09--24" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;dashed=1;" value="">
+        <mxCell id="QE0t6WZAYKJQhowR_09--24" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=8 8;" value="">
           <mxGeometry height="50" relative="1" width="50" as="geometry">
             <Array as="points" />
             <mxPoint x="907" y="1160" as="sourcePoint" />
