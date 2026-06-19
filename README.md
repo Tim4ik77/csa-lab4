@@ -474,32 +474,29 @@ examples/
 pytest -v
 ```
 
-Golden-файлы находятся в `golden/`. Каждый golden содержит:
+Golden-файлы в формате YAML находятся в `golden/`. Каждый golden содержит:
 
 - полный исходный код в поле `source`;
 - конфигурацию MMIO;
 - входное расписание;
 - полный дизассемблированный `machine_code_hex`;
 - полное начальное состояние `data_memory`;
-- потактовый `log_excerpt`;
+- потактовый `log` с первыми 500 строками;
 - ожидаемый вывод.
 
 Проверяемые сценарии:
 
-| Golden | Что проверяет | Вывод | Такты |
-| :--- | :--- | :--- | ---: |
-| `hello` | Посимвольный вывод через MMIO | `Hello\n` | 416 |
-| `cat` | Ввод через trap и `on-input` | `abc` | 1000* |
-| `hello_user_name` | Диалог, буфер, строки, прерывания | `What is your name?\nHello, Alice!\n` | 9286 |
-| `sort` | Работа с буфером и сортировка | `123\n` | 4423 |
-| `recursive_factorial_or_fibonacci` | Рекурсия | `8\n` | 3051 |
-| `double_precision` | 64-битное число как два слова | `8000000000\n` | 1845 |
-| `prob1` | Euler Problem 4 | `906609\n` | 1589019 |
-| `interrupts_default_handler` | Автогенерация default handler | пустой вывод | 10000* |
-| `interrupt_overrun` | Перезапись входа при overrun | `b` | 500* |
-
-`*` Сценарий намеренно не завершает программу инструкцией `HALT`; модель останавливается по лимиту
-тиков golden-теста.
+| Golden | Что проверяет | Вывод |
+| :--- | :--- | :--- |
+| `hello` | Посимвольный вывод через MMIO | `Hello\n` |
+| `cat` | Ввод через trap и `on-input` | `abc` |
+| `hello_user_name` | Диалог, буфер, строки, прерывания | `What is your name?\nHello, Alice!\n` |
+| `sort` | Работа с буфером и сортировка | `123\n` |
+| `recursive_factorial_or_fibonacci` | Рекурсия | `8\n` |
+| `double_precision` | 64-битное число как два слова | `8000000000\n` |
+| `prob1` | Euler Problem 4 | `906609\n` |
+| `interrupts_default_handler` | Автогенерация default handler | пустой вывод |
+| `interrupt_overrun` | Перезапись входа при overrun | `b` |
 
 ### Unit-тесты
 
