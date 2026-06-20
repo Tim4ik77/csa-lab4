@@ -32,3 +32,8 @@ coverage.xml
 .vscode/
 .DS_Store
 Thumbs.db
+
+#Мои файлы
+Язык.txt
+Машинные команды.txt
+Организация памяти.txt

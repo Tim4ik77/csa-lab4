@@ -378,7 +378,11 @@ python -m src.machine build/hello.bin build/hello.data.json examples/empty_input
 
 #### Data Path
 
-![Data Path](DP.png)
+![Data Path](DP-1.png)
+
+![Data Path](DP-2.png)
+
+Регистр флагов на схеме был вынесен для читаемости.
 
 ### DataPath
 
@@ -528,10 +532,3 @@ python -m mypy src tests
 pytest -v
 ```
 
-Локальная проверка:
-
-```text
-All checks passed!
-Success: no issues found in 17 source files
-26 passed
-```
